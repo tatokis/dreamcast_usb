@@ -27,6 +27,7 @@
 #include "gamepad.h"
 #include "dc_pad.h"
 #include "maplebus.h"
+#include "usbconfig.h"
 
 #define MOUSE_REPORT_SIZE		5
 #define CONTROLLER_REPORT_SIZE	6
@@ -174,12 +175,12 @@ const unsigned char dcPadDevDesc[] PROGMEM = {    /* USB device descriptor */
     USB_CFG_DEVICE_SUBCLASS,
     0,          /* protocol */
     8,          /* max packet size */
-	0x9B, 0x28,	// Vendor ID
-    0x08, 0x00, // Product ID
-	0x00, 0x01, // Version: Minor, Major
-	1, // Manufacturer String
-	2, // Product string
-	3, // Serial number string
+    USB_CFG_VENDOR_ID,	// Vendor ID
+    0 + USB_CFG_DEVICE_ID, // Product ID
+    USB_CFG_DEVICE_VERSION, // Version: Minor, Major
+    1, // Manufacturer String
+    2, // Product string
+    3, // Serial number string
     1, /* number of configurations */
 };
 
@@ -191,12 +192,12 @@ const unsigned char dcMouseDevDesc[] PROGMEM = {    /* USB device descriptor */
     USB_CFG_DEVICE_SUBCLASS,
     0,          /* protocol */
     8,          /* max packet size */
-	0x9B, 0x28,	// Vendor ID
-    0x09, 0x00, // Product ID
-	0x00, 0x01, // Version: Minor, Major
-	1, // Manufacturer String
-	2, // Product string
-	3, // Serial number string
+    USB_CFG_VENDOR_ID,	// Vendor ID
+    1 + USB_CFG_DEVICE_ID, // Product ID
+    USB_CFG_DEVICE_VERSION, // Version: Minor, Major
+    1, // Manufacturer String
+    2, // Product string
+    3, // Serial number string
     1, /* number of configurations */
 };
 
@@ -208,12 +209,12 @@ const unsigned char dcKeyboardDevDesc[] PROGMEM = {    /* USB device descriptor 
     USB_CFG_DEVICE_SUBCLASS,
     0,          /* protocol */
     8,          /* max packet size */
-	0x9B, 0x28,	// Vendor ID
-    0x0A, 0x00, // Product ID
-	0x00, 0x01, // Version: Minor, Major
-	1, // Manufacturer String
-	2, // Product string
-	3, // Serial number string
+    USB_CFG_VENDOR_ID,  // Vendor ID
+    2 + USB_CFG_DEVICE_ID, // Product ID
+    USB_CFG_DEVICE_VERSION, // Version: Minor, Major
+    1, // Manufacturer String
+    2, // Product string
+    3, // Serial number string
     1, /* number of configurations */
 };
 

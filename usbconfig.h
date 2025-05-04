@@ -218,7 +218,7 @@ section at the end of this file).
 
 /* -------------------------- Device Description --------------------------- */
 
-#define  USB_CFG_VENDOR_ID       0x9b, 0x28 /* Dracal/raphnet */
+#define  USB_CFG_VENDOR_ID       0x00, 0x00 /* Dracal/raphnet */
 /* USB vendor ID for the device, low byte first. If you have registered your
  * own Vendor ID, define it here. Otherwise you may use one of obdev's free
  * shared VID/PID pairs. Be sure to read USB-IDs-for-free.txt for rules!
@@ -230,15 +230,15 @@ section at the end of this file).
  * use it personally but beware of Windows' caching of report descriptors...
  *
  */
-#define  USB_CFG_DEVICE_ID       0x08, 0x00 /* Dremcast to USB */
+#define  USB_CFG_DEVICE_ID       0x00, 0x00 /* Dreamcast to USB  (+ 1 for Mouse and + 2 for Kbd) */
 
-#define USB_CFG_DEVICE_VERSION  0x02, 0x01
+#define USB_CFG_DEVICE_VERSION  0x01, 0x01
 /* Version number of the device: Minor number first, then major number.
  */
 #define USB_CFG_VENDOR_NAME     'r', 'a', 'p', 'h', 'n', 'e', 't', '.', 'n', 'e', 't'
 #define USB_CFG_VENDOR_NAME_LEN 11
-#define USB_CFG_DEVICE_NAME     'D','r','e','a','m','c','a','s','t',' ','t','o',' ','U','S','B'
-#define USB_CFG_DEVICE_NAME_LEN 16
+#define USB_CFG_DEVICE_NAME     'D','r','e','a','m','c','a','s','t',' ','t','o',' ','U','S','B', ' ', 'm', 'o', 'd'
+#define USB_CFG_DEVICE_NAME_LEN 20
 /* Same as above for the serial number. If you don't want a serial number,
  * undefine the macros.
  * It may be useful to provide the serial number through other means than at
