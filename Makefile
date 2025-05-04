@@ -2,11 +2,11 @@ CC=avr-gcc
 AS=$(CC)
 LD=$(CC)
 PROGNAME=dc_usb
-CPU=atmega168
+CPU=atmega328p
 
 CFLAGS=-Wall -Os -Iusbdrv -I. -mmcu=$(CPU) -DF_CPU=16000000L #-DDEBUG_LEVEL=1 
 LDFLAGS=-Wl,-Map=$(PROGNAME).map -mmcu=$(CPU) 
-AVRDUDE=avrdude -p m168 -P usb -c avrispmkII
+AVRDUDE=avrdude -p m328p -P usb -c avrispmkII
 
 OBJS=usbdrv/usbdrv.o usbdrv/usbdrvasm.o main.o maplebus.o dc_pad.o
 
@@ -52,33 +52,14 @@ $(HEXFILE):	$(ELFFILE)
 flash: $(HEXFILE)
 	$(AVRDUDE) -Uflash:w:$(HEXFILE) -B 1.0
 
-# Extended fuse byte (Datasheet Table 28-5)
-#
-#  -  -  -  -  -  BOOTSZ1  BOOTSZ0  BOOTRST
-#  0  0  0  0  0     0        0        1
-#
-EFUSE=0x01
+# Extended fuse byte
+EFUSE=0xfd
 
-# Fuse high byte (Datasheet Table 28-6)
-#
-# RSTDISBL  DWEN  SPIEN   WDTON  EESAVE  BODLEVEL2  BODLEVEL1  BODLEVEL0
-#    1        1      0      1      0         1          0          1
-#
-HFUSE=0xd5
+# Fuse high byte
+HFUSE=0xdb
 
-# Fuse low byte (Datasheet Table 28-7)
-#
-# CKDIV8   CKOUT   SUT1  SUT0  CKSEL3  CKSEL2  CKSEL1  CKSEL0
-#    1        1      0     1      0      1       1       1
-#
-# Full swing crystal oscillator
-# 0.4 - 20 MHz : CKSEL3..1  011
-#
-# Crystal Oscillator, BOD enabled (Table 9-6)
-# CKSEL0  : 1
-# SUT1..0 : 01
-#
-LFUSE=0xD7
+# Fuse low byte
+LFUSE=0xd7
 
 fuse:
 	$(AVRDUDE) -e -Uefuse:w:$(EFUSE):m -Uhfuse:w:$(HFUSE):m -Ulfuse:w:$(LFUSE):m -B 20.0 -v
