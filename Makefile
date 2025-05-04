@@ -4,7 +4,7 @@ LD=$(CC)
 PROGNAME=dc_usb
 CPU=atmega328p
 
-CFLAGS=-Wall -Os -Iusbdrv -I. -mmcu=$(CPU) -DF_CPU=16000000L #-DDEBUG_LEVEL=1 
+CFLAGS=-Wall -O3 -Iusbdrv -I. -mmcu=$(CPU) -DF_CPU=16000000L #-DDEBUG_LEVEL=1
 LDFLAGS=-Wl,-Map=$(PROGNAME).map -mmcu=$(CPU) 
 AVRDUDE=avrdude -p m328p -P usb -c avrispmkII
 
