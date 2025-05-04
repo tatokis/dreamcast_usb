@@ -62,6 +62,7 @@ uchar my_usbDescriptorConfiguration[] = {    /* USB configuration descriptor */
     1,          /* number of interfaces in this configuration */
     1,          /* index of this configuration */
     0,          /* configuration name string index */
+    0x80 |
 #if USB_CFG_IS_SELF_POWERED
     USBATTR_SELFPOWER,  /* attributes */
 #else
