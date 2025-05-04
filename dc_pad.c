@@ -30,7 +30,7 @@
 #include "usbconfig.h"
 
 #define MOUSE_REPORT_SIZE		5
-#define CONTROLLER_REPORT_SIZE	6
+#define CONTROLLER_REPORT_SIZE	8
 #define KEYBOARD_REPORT_SIZE	7
 #define MAX_REPORT_SIZE			8
 
@@ -54,33 +54,61 @@ static void dcUpdate(void);
  * [1] Y
  * [2] Ltrig
  * [3] Rtrig
- * [4] Btn 0-7
- * [5] Btn 8-15 
+ * [4] Btn 0-3 (4-7 are the hat switch and ignored in the descriptor)
+ * [5] Btn 8-15
  */
 static const unsigned char dcPadReport[] PROGMEM = {
     0x05, 0x01,                    // USAGE_PAGE (Generic Desktop)
     0x09, 0x05,                    // USAGE (Game pad)
     0xa1, 0x01,                    // COLLECTION (Application)
-	0x09, 0x01,                    //   USAGE (Pointer)    
-	0xa1, 0x00,                    //   COLLECTION (Physical)
+    0x09, 0x01,                    //   USAGE (Pointer)
+    0xa1, 0x00,                    //   COLLECTION (Physical)
     0x09, 0x30,                    //     USAGE (X)
     0x09, 0x31,                    //     USAGE (Y)
-	0x09, 0x36,					   //	  USAGE (Slider)
-	0x09, 0x36,
+    0x09, 0x33,	                   //     USAGE (Rx)
+    0x09, 0x34,                    //     USAGE (Ry)
     0x15, 0x00,                    //   LOGICAL_MINIMUM (0)
-    0x26, 0xff, 0x00,              //     LOGICAL_MAXIMUM (255)
+    0x26, 0xff, 0x00,              //   LOGICAL_MAXIMUM (255)
     0x75, 0x08,                    //   REPORT_SIZE (8)
     0x95, 0x04,                    //   REPORT_COUNT (4)
     0x81, 0x02,                    //   INPUT (Data,Var,Abs)
-	0x05, 0x09,                    // USAGE_PAGE (Button)
+
+                                   // Buttons
+    0x05, 0x09,                    // USAGE_PAGE (Button)
     0x19, 0x01,                    //   USAGE_MINIMUM (Button 1)
-    0x29, 0x10,                    //   USAGE_MAXIMUM (Button 16)
+    0x29, 0x04,                    //   USAGE_MAXIMUM (Button 4)
     0x15, 0x00,                    //   LOGICAL_MINIMUM (0)
     0x25, 0x01,                    //   LOGICAL_MAXIMUM (1)
     0x75, 0x01,                    // REPORT_SIZE (1)
-    0x95, 0x10,                    // REPORT_COUNT (16)
+    0x95, 0x04,                    // REPORT_COUNT (4)
     0x81, 0x02,                    // INPUT (Data,Var,Abs)
+
+                                   // Padding to ignore the hat switch
+    0x81, 0x01,                    // INPUT (Cnst,Arr,Abs)
+
+                                   // Remaining buttons + 2 fake buttons for triggers
+    0x19, 0x05,                    //   USAGE_MINIMUM (Button 5)
+    0x29, 0x10,                    //   USAGE_MAXIMUM (Button 12+4)
+//    0x75, 0x01,                    // REPORT_SIZE (1)
+    0x95, 0x0c,                    // REPORT_COUNT (12)
+    0x81, 0x02,                    // INPUT (Data,Var,Abs)
+                                   // Padding (6 bits)
+//    0x75, 0x01,                    // REPORT_SIZE (1)
+    0x95, 0x04,                    // REPORT_COUNT (6)
+    0x81, 0x01,                    // INPUT (Cnst,Arr,Abs)
+
     0xc0,                          // END_COLLECTION
+    0x05, 0x01,
+    0x09, 0x39,                    // (LOCAL)  USAGE              0x00010039 Hat Switch (Dynamic Value)
+    0x15, 0x01,                    // (GLOBAL) LOGICAL_MINIMUM    0x01 (1)
+    0x25, 0x08,                    // (GLOBAL) LOGICAL_MAXIMUM    0x08 (8)
+    0x35, 0x00,                    // (GLOBAL) PHYSICAL_MINIMUM   0x00 (0)  <-- Info: Consider replacing 35 00 with 34
+    0x46, 0x3B, 0x01,              // (GLOBAL) PHYSICAL_MAXIMUM   0x013B (315)
+    0x65, 0x14,                    // (GLOBAL) UNIT               0x14 Rotation in degrees [1° units] (4=System=English Rotation, 1=Rotation=Degrees)
+    0x75, 0x04,                    // (GLOBAL) REPORT_SIZE        0x04 (4) Number of bits per field
+    0x95, 0x01,                    // (GLOBAL) REPORT_COUNT       0x01 (1) Number of fields
+    0x81, 0x02,                    // (MAIN)   INPUT              0x00000002 (1 field x 4 bits) 0=Data 1=Variable 0=Absolute 0=NoWrap 0=Linear 0=PrefState 0=NoNull 0=NonVolatile 0=Bitmap
+
     0xc0,                          // END_COLLECTION
 };
 
@@ -92,7 +120,7 @@ static const unsigned char dcPadReport[] PROGMEM = {
  * [4] Mouse Y
  */
 static const unsigned char dcMouseReport[] PROGMEM = {
-	0x05, 0x01,                    // USAGE_PAGE (Generic Desktop)
+    0x05, 0x01,                    // USAGE_PAGE (Generic Desktop)
     0x09, 0x02,                    // USAGE (Mouse)
     0xa1, 0x01,                    // COLLECTION (Application)
     0x09, 0x01,                    //   USAGE (Pointer)
@@ -535,7 +563,7 @@ static void dcReadPad(void)
 			err_count = 0;
 
 			if (v < 16)
-				return;	
+				return;
 
 			// 8 : Buttons
 			// 9 : Buttons
@@ -551,6 +579,35 @@ static void dcReadPad(void)
 			last_built_report[0][3] = tmp[11];
 			last_built_report[0][4] = tmp[8] ^ 0xff;
 			last_built_report[0][5] = tmp[9] ^ 0xff;
+			last_built_report[0][6] = (tmp[10] != 0) | ((tmp[10] == 0xff) << 1) | ((tmp[11] != 0) << 2)  | ((tmp[11] == 0xff) << 3);
+			switch(tmp[8] >> 4) {
+				case 0xe:
+					last_built_report[0][7] = 1;
+					break;
+				case 0x6:
+					last_built_report[0][7] = 2;
+					break;
+				case 0x7:
+					last_built_report[0][7] = 3;
+					break;
+				case 0x5:
+					last_built_report[0][7] = 4;
+					break;
+				case 0xd:
+					last_built_report[0][7] = 5;
+					break;
+				case 0x9:
+					last_built_report[0][7] = 6;
+					break;
+				case 0xb:
+					last_built_report[0][7] = 7;
+					break;
+				case 0xa:
+					last_built_report[0][7] = 8;
+					break;
+				default:
+					last_built_report[0][7] = 0;
+			}
 		}
 		break;
 
