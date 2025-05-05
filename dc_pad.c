@@ -375,7 +375,35 @@ static void pollSubs(void)
 		}
 	}
 }
+/*
+static inline float boundf(const float a)
+{
+	const float f = (a < -128.f ? -128.f : a);
+	return (f > 127.f ? 127.f : f);
+}
+*/
+static inline int8_t axis_mult(const uint8_t a)
+{
+	// Let's pretend it's signed
+	uint8_t b = a - 0x80;
 
+	// Discard sign bit and shift to get the smaller number to add to the axis
+	// Since we're doing everything manually, if the number is negative, fix it up first
+	int8_t add;
+	if(b & 0x80)
+		add = -(int8_t)((~b & 0x7f) >> 2);
+	else
+		add = ((b & 0x7f) >> 2);
+
+	int res = (int8_t)b + add;
+	if(res > INT8_MAX)
+	        return INT8_MAX;
+
+	if(res < INT8_MIN)
+		return INT8_MIN;
+
+	return res;
+}
 static void dcReadPad(void)
 {
 	static unsigned char err_count = 0;
@@ -578,8 +606,25 @@ static void dcReadPad(void)
 			// 13 : Joy Y axis
 			// 14 : Joy X2 axis
 			// 15 : Joy Y2 axis
-			last_built_report[0][0] = tmp[12] - (unsigned char)0x80;
-			last_built_report[0][1] = tmp[13] - (unsigned char)0x80;
+
+			// HACK: Limit the analog stick range to effectively map it to a square
+			if(PIND & _BV(6)) {
+                                last_built_report[0][0] = axis_mult(tmp[12]);
+                                last_built_report[0][1] = axis_mult(tmp[13]);
+
+				// This also works, but I really did not want to use floats for this
+				/*float x = (signed char)(tmp[12] - (unsigned char)0x80);
+				float y = (signed char)(tmp[13] - (unsigned char)0x80);
+
+				x *= 1.35f;
+				y *= 1.35f;
+
+				last_built_report[0][0] = (signed char)boundf(x);
+				last_built_report[0][1] = (signed char)boundf(y);*/
+			} else {
+				last_built_report[0][0] = tmp[12] - 0x80;
+				last_built_report[0][1] = tmp[13] - 0x80;
+			}
 			last_built_report[0][2] = tmp[10];
 			last_built_report[0][3] = tmp[11];
 			last_built_report[0][4] = tmp[8] ^ 0xff;
