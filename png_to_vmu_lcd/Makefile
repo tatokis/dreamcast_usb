@@ -1,7 +1,7 @@
 CC=gcc
 LD=$(CC)
-CFLAGS=-Wall -g `libpng-config --cflags`
-LDFLAGS=`libpng-config --libs`
+CFLAGS=-Wall -g $(shell libpng-config --cflags)
+LDFLAGS=$(shell libpng-config --libs)
 
 PROG=png_to_vmu_lcd
 OBJS=main.o
@@ -12,6 +12,6 @@ clean:
 	rm $(PROG) $(OBJS)
 
 $(PROG): $(OBJS)
-	$(LD) $(LDFLAGS) $^ -o $@
+	$(LD) $^ -o $@ $(LDFLAGS)
 
 
